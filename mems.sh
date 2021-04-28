@@ -13,7 +13,7 @@ function mems {
 
 function __mems_write {
 	date > $MEMS_PATH/file
-	git commit -am "$*"
+	git  --git-dir $MEMS_PATH/.git commit -am "$*"
 }
 
 function __mems_list {
