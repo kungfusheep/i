@@ -96,6 +96,6 @@ function __i_find {
 # do an init of the i repo if we detect it isn't there
 if [ ! -e "$I_PATH" ]; then
 	mkdir -p $I_PATH
-	git -qC $I_PATH/ init
+	git -C $I_PATH/ init -q
 	__i_write 'created a journal'
 fi
