@@ -37,7 +37,7 @@ function i {
 		"find") # generic find for anything
 			shift
 
-			__i_find "${1}"
+			__i_find "$*"
 			return;;
 
 		"occurrences") # count occurrences of anything
@@ -90,7 +90,7 @@ function __i_tagged_something {
 
 # basic search across the results
 function __i_find {
-	__i_list | grep ${1}
+	__i_list | grep "${1}"
 }
 
 # do an init of the i repo if we detect it isn't there
