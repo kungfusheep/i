@@ -1,7 +1,7 @@
 
 I_PATH=~/i
 
-complete -W "list mentioned tagged find occurrences git" i
+complete -W "amend list mentioned tagged find occurrences git" i
 
 # TODO add completion for names and tags
 
@@ -10,6 +10,11 @@ function i {
 
 	# select command name, if none are recognised then we're writing a journal entry. 
 	case "${1}" in
+
+		"amend") # overwrite the last message - useful in case of missing info or typo's
+			shift
+			__i_amend $*; return;;
+
 		"list" ) # list out the journal
 			__i_list; return;;
 
@@ -59,13 +64,18 @@ function __i_write {
 	git  -C $I_PATH/ commit --allow-empty -qam "$*"
 }
 
+# amend the previous message
+function __i_amend {
+	git  -C $I_PATH/ commit --allow-empty --amend -qam "$*"
+}
+
 # list the entries in readable format
 function __i_list {
 	git -C $I_PATH/ log --pretty=format:"%Cblue%cr: %Creset%B";
 }
 
 function __i_count_occurrences {
-	__i_list | sed 's/\ /\n/g' | grep ${1} --color=never | sed s/,//g | sort | uniq -c | sort -rh
+	__i_list | sed 's/\ /\n/g' | grep ${1} --color=never | sed 's/,//g; s/\.//g' | sort | uniq -c | sort -rh
 }
 
 # list the names mentioned
