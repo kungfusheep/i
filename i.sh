@@ -5,6 +5,8 @@ complete -W "amend list mentioned tagged find occurrences git" i
 
 # TODO add completion for names and tags
 
+since=""
+
 # default entrypoint
 function i {
 
@@ -48,11 +50,12 @@ function i {
 		"occurrences") # count occurrences of anything
 			shift
 
-			__i_count_occurrences "${1}"
+			__i_count_occurrences "$@"
 			return;;
 
 		"git" ) # run arbitrary git commands on the i repo
 			shift
+
 			git -C $I_PATH/ "$@"; return;;
 	esac
 
@@ -72,7 +75,7 @@ function __i_amend {
 
 # list the entries in readable format
 function __i_list {
-	git -C $I_PATH/ log --pretty=format:"%Cblue%cr: %Creset%B";
+	git -C $I_PATH/ log --since "${since:-1970}" --pretty=format:"%Cblue%cr: %Creset%B";
 }
 
 function __i_count_occurrences {
