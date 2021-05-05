@@ -52,7 +52,8 @@ function i {
 			return;;
 
 		"git" ) # run arbitrary git commands on the i repo
-			git -C $I_PATH/ ${@:2}; return;;
+			shift
+			git -C $I_PATH/ "$@"; return;;
 	esac
 
 	# add a journal entry
