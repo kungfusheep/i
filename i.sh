@@ -15,7 +15,7 @@ function i {
 
 		"amend") # overwrite the last message - useful in case of missing info or typo's
 			shift
-			__i_amend $*; return;;
+			__i_amend "$@"; return;;
 
 		"list" ) # list out the journal
 			__i_list; return;;
@@ -60,7 +60,7 @@ function i {
 	esac
 
 	# add a journal entry
-	__i_write $*
+	__i_write "$@"
 }
 
 # write a (potentially empty) commit with a message
