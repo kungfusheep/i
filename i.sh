@@ -2,7 +2,7 @@
 I_PATH=~/i
 I_SOURCE_DIR=$(cd "$( dirname "${BASH_SOURCE[0]}" )" &> /dev/null && pwd)
 
-complete -W "amend list mentioned tagged find occurrences git upgrade" i
+complete -W "amend list mentioned tagged find occurrences git upgrade today yesterday" i
 
 # TODO add completion for names and tags
 
@@ -59,9 +59,22 @@ function i {
 
 			git -C $I_PATH/ "$@"; return;;
 
+		"today") # view todays journal entries with a special date format, paginated
+			shift
+
+			git -C $I_PATH/ log --since "1am"  --pretty=format:"%Cblue%cd (%cr): %Creset%B" --date=format:"%H:%M" | fmt | less
+			return;;
+
+		"yesterday") # view yesterdays journal entries with a special date format, paginated
+	
+			# i'm using this until i've implemented 'until'
+			git -C $I_PATH/ log --since "2 days ago" --until midnight  --pretty=format:"%Cblue%cd: %Creset%B" --date=format:"%H:%M" | fmt | less
+			return;;
+
 		"upgrade") # upgrade the 'i' client
 			git -C $I_SOURCE_DIR pull
 			source $I_SOURCE_DIR/i.sh
+			return;;
 	esac
 
 	# add a journal entry
