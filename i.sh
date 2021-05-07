@@ -1,7 +1,8 @@
 
 I_PATH=~/i
+I_SOURCE_DIR=$(cd "$( dirname "${BASH_SOURCE[0]}" )" &> /dev/null && pwd)
 
-complete -W "amend list mentioned tagged find occurrences git" i
+complete -W "amend list mentioned tagged find occurrences git upgrade" i
 
 # TODO add completion for names and tags
 
@@ -57,6 +58,10 @@ function i {
 			shift
 
 			git -C $I_PATH/ "$@"; return;;
+
+		"upgrade") # upgrade the 'i' client
+			git -C $I_SOURCE_DIR pull
+			source $I_SOURCE_DIR/i.sh
 	esac
 
 	# add a journal entry
