@@ -94,6 +94,29 @@ source i.sh #this creates your journal repo at ~/i
 51 minutes ago: had a coffee with @fred, he told me about %anotherproject
 ```
 
+### Get a digest
+
+You can use `i` to make a weekly digest using your notes. For this to work you need `GPT_ACCESS_TOKEN` to be set in your environment. 
+
+```bash
+❯ i digest
+# Project
+- Had a meeting with **John** and **Linda**
+- Discussed **Project**
+
+# AnotherProject
+- Had another conversation with **Fred**, he told me to speak to **Kelly**
+- Had a coffee with **Fred**, he told me about **AnotherProject**
+
+# General Updates
+- Went for a walk
+- Spoke to **John**
+- Added an entry
+- Created a journal
+```
+
+
+
 
 ## Execute arbitrary git commands
 

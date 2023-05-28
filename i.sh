@@ -2,7 +2,7 @@
 I_PATH=~/i
 I_SOURCE_DIR=$(cd "$( dirname "${BASH_SOURCE[0]}" )" &> /dev/null && pwd)
 
-complete -W "amend list mentioned tagged find occurrences git upgrade today yesterday" i
+complete -W "amend list mentioned tagged find occurrences git upgrade today yesterday digest" i
 
 # TODO add completion for names and tags
 
@@ -71,10 +71,15 @@ function i {
 			git -C $I_PATH/ log --since "2 days ago" --until midnight  --pretty=format:"%Cblue%cd: %Creset%B" --date=format:"%H:%M" | fmt | less
 			return;;
 
+		"digest") # use gpt to summarise the weeks activity into a digest
+			__i_summary
+			return;;
+
 		"upgrade") # upgrade the 'i' client
 			git -C $I_SOURCE_DIR pull
 			source $I_SOURCE_DIR/i.sh
 			return;;
+
 	esac
 
 	# add a journal entry
@@ -123,6 +128,39 @@ function __i_tagged_something {
 # basic search across the results
 function __i_find {
 	__i_list | grep "${1}"
+}
+
+# use gpt to summarise the weeks activity into a digest
+function __i_summary {
+	OUT=$(git -C $I_PATH/ log --since "last monday" --pretty=format:"%Cblue%cr: %Creset%B" | tr -d '\n')
+
+	curl -X POST -s --http2 --no-buffer -w "Type: %{content_type}\nCode: %{response_code}\n" \
+	-H "Content-Type: application/json" \
+	-H "Authorization: Bearer $GPT_ACCESS_TOKEN" \
+	-d '{
+		"model": "gpt-4",
+		"stream": true,
+		"temperature": 0,
+		"messages": [
+			{
+				"role": "user", 
+				"content": "summarise the notes below into MARKDOWN sections about distinct subjects in order for me to give a weekly update. double check there are the minimum possible number of subjects. the format should be TITLE OF SUBJECT followed by BULLET LIST OF SUBJECT ENTRIES. remove any @ symbols at the start of names. always make names bold text. if a word starts with a % then use that word as the subject title. \n\n\n'"$OUT"'"
+			}
+		]
+	}' \
+	https://api.openai.com/v1/chat/completions | awk -F "data: " '/^data: /{print $2; fflush()}'| \
+	python3 -c "
+import sys
+import json
+
+for line in sys.stdin:
+    try:
+        data = json.loads(line).get('choices')[0].get('delta').get('content')
+        if data is not None:
+            print(data, end='', flush=True)
+    except json.JSONDecodeError:
+        pass  # ignore lines that are not valid JSON
+"
 }
 
 # do an init of the i repo if we detect it isn't there
