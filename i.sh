@@ -134,7 +134,7 @@ function __i_find {
 function __i_summary {
 	OUT=$(git -C $I_PATH/ log --since "last monday" --pretty=format:"%Cblue%cr: %Creset%B" | tr -d '\n')
 
-	curl -X POST -s --http2 --no-buffer -w "Type: %{content_type}\nCode: %{response_code}\n" \
+	curl -X POST -s --http2 --no-buffer \
 	-H "Content-Type: application/json" \
 	-H "Authorization: Bearer $GPT_ACCESS_TOKEN" \
 	-d '{

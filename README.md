@@ -98,6 +98,8 @@ source i.sh #this creates your journal repo at ~/i
 
 You can use `i` to make a weekly digest using your notes. For this to work you need `GPT_ACCESS_TOKEN` to be set in your environment. 
 
+To generate an OpenAI key, go to [https://platform.openai.com/account/api-keys](https://platform.openai.com/account/api-keys) and create a new key. 
+
 ```bash
 ❯ i digest
 # Project
