@@ -117,7 +117,22 @@ To generate an OpenAI key, go to [https://platform.openai.com/account/api-keys](
 - Created a journal
 ```
 
+### Be reminded of things from last week
 
+Using the GPT API you can ask `i` to remind you of things from last week. 
+
+```bash
+❯ i remember
+- Catch up with **John** about **Project**
+```
+
+### Analyse your journal using the GPT API
+
+You can use the GPT API to analyse your journal. 
+
+```bash
+❯ i analyse since "2 days ago" list all the people I spoke to along with a sentiment analysis
+```
 
 
 ## Execute arbitrary git commands
