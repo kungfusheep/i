@@ -2,13 +2,13 @@
 I_PATH=~/i
 I_SOURCE_DIR=$(cd "$( dirname "${BASH_SOURCE[0]}" )" &> /dev/null && pwd)
 
-complete -W "amend list mentioned tagged find occurrences git upgrade today yesterday digest" i
+complete -W "amend list mentioned tagged find occurrences git upgrade today yesterday digest remember analyse" i
 
 # TODO add completion for names and tags
 
 since=""
 
-# default entrypoint
+# default entrypoint for the i command
 function i {
 
 	# select command name, if none are recognised then we're writing a journal entry. 
@@ -72,8 +72,19 @@ function i {
 			return;;
 
 		"digest") # use gpt to summarise the weeks activity into a digest
-			__i_summary
+			__i_digest
 			return;;
+
+		"remember") # use gpt to generate a todo list of tasks that sound like they are outstanding from the previous week
+			__i_remember
+			return;;
+
+		"analyse")
+			shift
+
+			__i_analyse "$@"
+			return;;
+
 
 		"upgrade") # upgrade the 'i' client
 			git -C $I_SOURCE_DIR pull
@@ -130,9 +141,21 @@ function __i_find {
 	__i_list | grep "${1}"
 }
 
-# use gpt to summarise the weeks activity into a digest
-function __i_summary {
-	OUT=$(git -C $I_PATH/ log --since "last monday" --pretty=format:"%Cblue%cr: %Creset%B" | tr -d '\n')
+# run arbitrary GPT analysis commands on a specific time window from the journal
+# the syntax is `i analyse since "last monday" list all people i interacted with`
+function __i_analyse { 
+	item="${1}"
+	shift
+
+	if [ "$item" == "since" ]; then # allow user to type "since" as first argument
+		item="${1}"
+		shift
+	fi
+
+	# the journal
+	OUT=$(git -C $I_PATH/ log --since "$item" --pretty=format:"%cr: %B" | tr -d '\n')
+	# the whole prompt
+	PROMPT="$* \n\n\n "$OUT""
 
 	curl -X POST -s --http2 --no-buffer \
 	-H "Content-Type: application/json" \
@@ -141,25 +164,76 @@ function __i_summary {
 		"model": "gpt-4",
 		"stream": true,
 		"temperature": 0,
+		"frequency_penalty": 1.0,
 		"messages": [
 			{
 				"role": "user", 
-				"content": "summarise the notes below into MARKDOWN sections about distinct subjects in order for me to give a weekly update. double check there are the minimum possible number of subjects. the format should be TITLE OF SUBJECT followed by BULLET LIST OF SUBJECT ENTRIES. remove any @ symbols at the start of names. always make names bold text. if a word starts with a % then use that word as the subject title. \n\n\n'"$OUT"'"
+				"content": "'"$PROMPT"'"
 			}
 		]
 	}' \
-	https://api.openai.com/v1/chat/completions | awk -F "data: " '/^data: /{print $2; fflush()}'| \
+	https://api.openai.com/v1/chat/completions | __i__server_push_to_stdout
+}
+
+# use gpt to summarise the weeks activity into a digest
+function __i_digest {
+	OUT=$(git -C $I_PATH/ log --since "last monday" --pretty=format:"%cr: %B" | tr -d '\n')
+
+	curl -X POST -s --http2 --no-buffer \
+	-H "Content-Type: application/json" \
+	-H "Authorization: Bearer $GPT_ACCESS_TOKEN" \
+	-d '{
+		"model": "gpt-4",
+		"stream": true,
+		"temperature": 0,
+		"frequency_penalty": 1.0,
+		"messages": [
+			{
+				"role": "user", 
+				"content": "summarise the notes below into MARKDOWN sections about distinct subjects in order for me to give a weekly update. double check there are the minimum possible number of subjects, for example, do not create a header called `RPC Tooling` if an `RPC` header also exists, and so on. the format should be TITLE OF SUBJECT followed by BULLET LIST OF SUBJECT ENTRIES. do not include entries that simply state a conversation took place with no other detail unless it is the only item within a section. remove any @ symbols at the start of names. always make names bold text. if a word starts with a % then use that word as the subject title. be as concise as possible with each bullet point without losing significant points of information and do not omit instances of work that took place.  after you have generated the full list, generate a footer section which outlines EVERY individual activity that took place that week.  after that section, please make note of EVERY person I spoke to along with the number of times I spoke to them AND a sentiment analysis of our interactions scoring 0-10. \n\n\n'"$OUT"'"
+			}
+		]
+	}' \
+	https://api.openai.com/v1/chat/completions | __i__server_push_to_stdout
+}
+
+# use gpt to generate a todo list of tasks that sound like they are outstanding from the previous week
+function __i_remember {
+	OUT=$(git -C $I_PATH/ log --since "last monday" --pretty=format:"%cr: %B" | tr -d '\n')
+
+	curl -X POST -s --http2 --no-buffer \
+	-H "Content-Type: application/json" \
+	-H "Authorization: Bearer $GPT_ACCESS_TOKEN" \
+	-d '{
+		"model": "gpt-4",
+		"stream": true,
+		"temperature": 0,
+		"frequency_penalty": 0.38,
+		"presence_penalty": 0.38,
+		"messages": [
+			{
+				"role": "user", 
+				"content": "I want you to generate a todo list of tasks that sound like they are outstanding in the following journal entries from last week. I am not asking for a todo list based on every single item - it is ok for there to be no items at all. I specifically want to identify tasks which sound like they are not resolved, so I can pick them up after the report is generated. please take into account the date at the start of each entry  and figure out based on that whether tasks were being resolved throughout the week. Only raise tasks you KNOW are unresolved, do not guess - when you see language such as \"i need to\" for example.  do not include actions other people have taken. DO NOT output line numbers. DO NOT output a title, just a bullet list.  \n\n\n'"$OUT"'"
+			}
+		]
+	}' \
+	https://api.openai.com/v1/chat/completions | __i__server_push_to_stdout | fzf -m --header "Select using TAB >"
+}
+
+# used to parse the server push messages in the completions response and output them to stdout
+function __i__server_push_to_stdout { 
+	awk -F "data: " '/^data: /{print $2; fflush()}'| \
 	python3 -c "
 import sys
 import json
 
 for line in sys.stdin:
-    try:
-        data = json.loads(line).get('choices')[0].get('delta').get('content')
-        if data is not None:
-            print(data, end='', flush=True)
-    except json.JSONDecodeError:
-        pass  # ignore lines that are not valid JSON
+	try:
+		data = json.loads(line).get('choices')[0].get('delta').get('content')
+		if data is not None:
+			print(data, end='', flush=True)
+	except json.JSONDecodeError:
+		pass  # ignore lines that are not valid JSON
 "
 }
 
