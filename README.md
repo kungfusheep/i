@@ -4,6 +4,8 @@
 
 It takes a couple of ideas from other journaling systems and mixes them with git, to enable easy distribution of the journal between different systems. 
 
+It provides some easy ways of presenting the data along with integration with the GPT API to perform analyis of specific time windows in your journal. 
+
 ## install
 
 Requires `git`
@@ -85,7 +87,6 @@ source i.sh #this creates your journal repo at ~/i
    2 told
 ```
 
-
 ### Find things
 
 ```bash
@@ -94,11 +95,15 @@ source i.sh #this creates your journal repo at ~/i
 51 minutes ago: had a coffee with @fred, he told me about %anotherproject
 ```
 
-### Get a digest
+## GPT Integration
 
-You can use `i` to make a weekly digest using your notes. For this to work you need `GPT_ACCESS_TOKEN` to be set in your environment. 
+The following actions use the GPT API. For this to work you need `GPT_ACCESS_TOKEN` to be set in your environment. 
 
 To generate an OpenAI key, go to [https://platform.openai.com/account/api-keys](https://platform.openai.com/account/api-keys) and create a new key. 
+
+### Get a digest
+
+You can use `i` to make a weekly digest using your notes. 
 
 ```bash
 ❯ i digest
@@ -123,21 +128,33 @@ Using the GPT API you can ask `i` to remind you of things from last week.
 
 ```bash
 ❯ i remember
-- Catch up with **John** about **Project**
+- Catch up with **Kelly**
 ```
 
-### Analyse your journal using the GPT API
+### Analyse your journal 
 
-You can use the GPT API to analyse your journal. 
+You can use the GPT API to easily analyse your journal with arbitrary prompts. 
 
 ```bash
-❯ i analyse since "2 days ago" list all the people I spoke to along with a sentiment analysis
-```
+❯ i analyse since "2 days ago" give me a list of names from this along with a sentiment analysis of the conversations
+Names mentioned:
+1. John
+2. Fred 
+3. Linda
+4. Kelly
 
+Sentiment analysis of the conversations:
+
+1) Conversations with John: Neutral to positive, discussing technical issues and solutions.
+2) Conversations with Fred: Neutral to positive, providing guidance and discussing progress on projects.
+3) Conversations with Linda: Neutral to positive, discussing technical issues and solutions.
+```
 
 ## Execute arbitrary git commands
 
-Your journal is just a git repo, by running `i git` you can run any git command on its repo. 
+Your journal is just a git repo and the entries are just empty commits with a commit message. 
+
+By running `i git` you can run any git command on its repo. 
 
 ```
 i git log
@@ -160,4 +177,10 @@ commit 74fc4de053bfb6d6f4c...
 
 ```bash
 i git remote add origin git@my-git.lb.local:me/myi.git
+```
+
+### Push to a remote
+
+```bash
+i git push
 ```
