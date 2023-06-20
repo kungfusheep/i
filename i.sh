@@ -1,7 +1,7 @@
 
 I_PATH=~/i
 I_SOURCE_DIR=$(cd "$( dirname "${BASH_SOURCE[0]}" )" &> /dev/null && pwd)
-I_GPT_VERSION="gpt-4"
+I_GPT_VERSION="${I_GPT_VERSION:=gpt-4}"
 
 complete -W "amend list mentioned tagged find occurrences git upgrade today yesterday digest remember analyse" i
 
