@@ -101,6 +101,8 @@ The following actions use the GPT API. For this to work you need `GPT_ACCESS_TOK
 
 To generate an OpenAI key, go to [https://platform.openai.com/account/api-keys](https://platform.openai.com/account/api-keys) and create a new key. 
 
+You can configure the version of the GPT API to use by setting `I_GPT_VERSION` in your environment. The default is gpt-4. 
+
 ### Get a digest
 
 You can use `i` to make a weekly digest using your notes. 

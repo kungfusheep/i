@@ -1,6 +1,7 @@
 
 I_PATH=~/i
 I_SOURCE_DIR=$(cd "$( dirname "${BASH_SOURCE[0]}" )" &> /dev/null && pwd)
+I_GPT_VERSION="gpt-4"
 
 complete -W "amend list mentioned tagged find occurrences git upgrade today yesterday digest remember analyse" i
 
@@ -157,11 +158,11 @@ function __i_analyse {
 	# the whole prompt
 	PROMPT="$* \n\n\n "$OUT""
 
-	curl -X POST -s --http2 --no-buffer \
+	curl -X POST -s --no-buffer \
 	-H "Content-Type: application/json" \
 	-H "Authorization: Bearer $GPT_ACCESS_TOKEN" \
 	-d '{
-		"model": "gpt-4",
+		"model": "'"$I_GPT_VERSION"'",
 		"stream": true,
 		"temperature": 0,
 		"frequency_penalty": 1.0,
@@ -179,11 +180,11 @@ function __i_analyse {
 function __i_digest {
 	OUT=$(git -C $I_PATH/ log --since "last monday" --pretty=format:"%cr: %B" | tr -d '\n')
 
-	curl -X POST -s --http2 --no-buffer \
+	curl -X POST -s --no-buffer \
 	-H "Content-Type: application/json" \
 	-H "Authorization: Bearer $GPT_ACCESS_TOKEN" \
 	-d '{
-		"model": "gpt-4",
+		"model": "'"$I_GPT_VERSION"'",
 		"stream": true,
 		"temperature": 0,
 		"frequency_penalty": 1.0,
@@ -201,11 +202,11 @@ function __i_digest {
 function __i_remember {
 	OUT=$(git -C $I_PATH/ log --since "last monday" --pretty=format:"%cr: %B" | tr -d '\n')
 
-	curl -X POST -s --http2 --no-buffer \
+	curl -X POST -s --no-buffer \
 	-H "Content-Type: application/json" \
 	-H "Authorization: Bearer $GPT_ACCESS_TOKEN" \
 	-d '{
-		"model": "gpt-4",
+		"model": "'"$I_GPT_VERSION"'",
 		"stream": true,
 		"temperature": 0,
 		"frequency_penalty": 0.38,
