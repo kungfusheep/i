@@ -178,7 +178,7 @@ function __i_analyse {
 
 # use gpt to summarise the weeks activity into a digest
 function __i_digest {
-	OUT=$(git -C $I_PATH/ log --since "last monday" --pretty=format:"%cr: %B" | tr -d '\n')
+	OUT=$(git -C $I_PATH/ log --since "last friday" --pretty=format:"%cr: %B" | tr -d '\n')
 
 	curl -X POST -s --no-buffer \
 	-H "Content-Type: application/json" \
