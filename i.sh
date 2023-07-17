@@ -154,7 +154,7 @@ function __i_analyse {
 	fi
 
 	# the journal
-	OUT=$(git -C $I_PATH/ log --since "$item" --pretty=format:"%cr: %B" | tr -d '\n')
+	OUT=$(git -C $I_PATH/ log --since "$item" --pretty=format:"%cr: %B" | tr -d '"\n')
 	# the whole prompt
 	PROMPT="$* \n\n\n "$OUT""
 
@@ -178,7 +178,7 @@ function __i_analyse {
 
 # use gpt to summarise the weeks activity into a digest
 function __i_digest {
-	OUT=$(git -C $I_PATH/ log --since "last friday" --pretty=format:"%cr: %B" | tr -d '\n')
+	OUT=$(git -C $I_PATH/ log --since "last friday" --pretty=format:"%cr: %B" | tr -d '"\n')
 
 	curl -X POST -s --no-buffer \
 	-H "Content-Type: application/json" \
@@ -200,7 +200,7 @@ function __i_digest {
 
 # use gpt to generate a todo list of tasks that sound like they are outstanding from the previous week
 function __i_remember {
-	OUT=$(git -C $I_PATH/ log --since "last monday" --pretty=format:"%cr: %B" | tr -d '\n')
+	OUT=$(git -C $I_PATH/ log --since "last monday" --pretty=format:"%cr: %B" | tr -d '"\n')
 
 	curl -X POST -s --no-buffer \
 	-H "Content-Type: application/json" \
