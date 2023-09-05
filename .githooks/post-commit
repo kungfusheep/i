@@ -1,0 +1,16 @@
+#!/bin/bash
+##
+# post-commit hook
+##
+
+if [ -f "$HOME/.shell/third/i.sh" ]; then
+    commit_message=$(git log -1 --pretty=format:%s)
+    repo_name=$(basename $(git rev-parse --show-toplevel))
+    branch_name=$(git rev-parse --abbrev-ref HEAD)
+
+    if [ "$repo_name" = "i" ]; then
+        exit 0
+    fi
+
+    $HOME/.shell/third/i.sh "[repo:$repo_name] (branch:$branch_name) cmsg: '$commit_message'"
+fi
