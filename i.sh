@@ -92,10 +92,48 @@ function i {
 			source $I_SOURCE_DIR/i.sh
 			return;;
 
+		
+		"help") # Display help
+			__i_help
+			return;;
+		
+		"--help") # Display help
+			__i_help
+			return;;
+		
+		"-h") # Display help
+			__i_help
+			return;;
+
 	esac
 
 	# add a journal entry
 	__i_write "$@"
+}
+
+# basic help function
+function __i_help {
+  echo "Usage: i [COMMAND|MESSAGE]"
+  echo ""
+  echo "COMMANDS:"
+  echo "  help(-h|--help)  Display this help for the 'i' command."
+  echo "  amend            Overwrite the last message - useful in case of missing info or typos."
+  echo "  list             List out the journal."
+  echo "  mentioned        List out names mentioned or entries where a specific person is mentioned."
+  echo "  tagged           List out tags mentioned or entries where a specific tag is mentioned."
+  echo "  find             Generic find for anything."
+  echo "  occurrences      Count occurrences of anything."
+  echo "  git              Run arbitrary git commands on the 'i' repo."
+  echo "  today            View today's journal entries with a special date format, paginated."
+  echo "  yesterday        View yesterday's journal entries with a special date format, paginated."
+  echo "  digest           Use GPT to summarize the week's activity into a digest."
+  echo "  remember         Use GPT to generate a to-do list of tasks that sound outstanding from the previous week."
+  echo "  analyse          Run arbitrary GPT analysis commands on a specific time window from the journal."
+  echo "  upgrade          Upgrade the 'i' client."
+  echo ""
+  echo "By default, if none of the recognized commands are used, a new journal entry is created with the provided message."
+  echo ""
+  echo "For more detailed information on each command, look at the source of 'i.sh'."
 }
 
 # write a (potentially empty) commit with a message
