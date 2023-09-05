@@ -107,6 +107,11 @@ function i {
 
 	esac
 
+	if [ ! -n "${1}" ]; then
+		__i_help
+		return
+	fi
+
 	# add a journal entry
 	__i_write "$@"
 }
@@ -138,12 +143,28 @@ function __i_help {
 
 # write a (potentially empty) commit with a message
 function __i_write {
+	HOOKS_PATH="$(git config core.hooksPath)"
+	git config core.hooksPath .git/hooks
 	git  -C $I_PATH/ commit --allow-empty -qam "$*"
+	git config core.hooksPath "$HOOKS_PATH"
+
+	# If we have a remote, push to it async
+	if [ -n "$(git  -C $I_PATH/ remote show origin)" ]; then
+		( git  -C $I_PATH/ push -u origin main -q > /dev/null 2>&1 & );
+	fi
 }
 
 # amend the previous message
 function __i_amend {
+	HOOKS_PATH="$(git config core.hooksPath)"
+	git config core.hooksPath .git/hooks
 	git  -C $I_PATH/ commit --allow-empty --amend -qam "$*"
+	git config core.hooksPath "$HOOKS_PATH"
+
+	# If we have a remote, push to it async
+	if [ -n "$(git  -C $I_PATH/ remote show origin)" ]; then
+		( git  -C $I_PATH/ push -u origin main -q > /dev/null 2>&1 & );
+	fi
 }
 
 # list the entries in readable format
@@ -281,4 +302,9 @@ if [ ! -e "$I_PATH" ]; then
 	mkdir -p $I_PATH
 	git -C $I_PATH/ init -q
 	__i_write 'created a journal'
+fi
+
+# Check if the script is being executed directly. If so, we run i directly
+if [[ "${BASH_SOURCE[0]}" = "${0}" ]]; then
+    i "$@"
 fi
