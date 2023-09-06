@@ -187,7 +187,7 @@ i git remote add origin git@my-git.lb.local:me/myi.git
 i git push
 ```
 
-## log commits to other repositories to i.sh automatically
+## Log commits made in other repositories to i.sh
 
 A post-commit hook provided in `.githooks/post-commit` which will then automatically log commits using `i.sh`.
 
