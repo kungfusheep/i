@@ -242,9 +242,9 @@ function __i_unique_occurrences_completion {
 
 function __i_completion {
 	local cur_word
-    cur_word="${COMP_WORDS[COMP_CWORD]}"
-    if [[ "$cur_word" == "@"* ]]; then
-        words=$(__i_unique_occurrences_completion @)
+	cur_word="${COMP_WORDS[COMP_CWORD]}"
+	if [[ "$cur_word" == "@"* ]]; then
+		words=$(__i_unique_occurrences_completion @)
 	elif [[ "$cur_word" == "%"* ]]; then
 		words=$(__i_unique_occurrences_completion %)
 	else
