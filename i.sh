@@ -249,7 +249,7 @@ function __i_completion {
 
 	case $cur_word in
 	%*) words=$(__i_unique_occurrences_completion % ) ;;
-	@*) words=$(__i_unique_occurrences_completion @ | sed 's/@[^A-Za-z0-9]//g') ;;
+	@*) words=$(__i_unique_occurrences_completion @ ) ;;
 	esac
 
 	# __i_unique_occurrences @
