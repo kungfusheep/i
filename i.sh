@@ -162,7 +162,7 @@ function __i_amend {
 	git config core.hooksPath "$HOOKS_PATH"
 
 	# If we have a remote, push to it async
-	if [ -n "$(git  -C $I_PATH/ remote show origin)" ]; then
+	if [ -n "$(git  -C $I_PATH/ remote show | grep origin)" ]; then
 		( git  -C $I_PATH/ push -u origin main -f -q > /dev/null 2>&1 & );
 	fi
 }
