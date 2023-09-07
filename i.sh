@@ -248,7 +248,7 @@ function __i_completion {
 	words="amend list mentioned tagged find occurrences git upgrade today yesterday digest remember analyse"
 
 	case $cur_word in
-	%*) words=$(__i_unique_occurrences_completion @ | sed 's/@[^A-Za-z0-9]//g') ;;
+	%*) words=$(__i_unique_occurrences_completion % ;;
 	@*) words=$(__i_unique_occurrences_completion @ | sed 's/@[^A-Za-z0-9]//g') ;;
 	esac
 
