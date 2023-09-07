@@ -242,14 +242,17 @@ function __i_unique_occurrences_completion {
 
 function __i_completion {
 	local cur_word
-	cur_word="${COMP_WORDS[COMP_CWORD]}"
-	if [[ "$cur_word" == "@"* ]]; then
-		words=$(__i_unique_occurrences_completion @)
-	elif [[ "$cur_word" == "%"* ]]; then
-		words=$(__i_unique_occurrences_completion %)
-	else
-		words="amend list mentioned tagged find occurrences git upgrade today yesterday digest remember analyse"
-	fi
+    cur_word="${COMP_WORDS[COMP_CWORD]}"
+
+	local words
+	words="amend list mentioned tagged find occurrences git upgrade today yesterday digest remember analyse"
+
+	case $cur_word in
+	%*) words=$(__i_unique_occurrences_completion @ | sed 's/@[^A-Za-z0-9]//g') ;;
+	@*) words=$(__i_unique_occurrences_completion @ | sed 's/@[^A-Za-z0-9]//g') ;;
+	esac
+
+	# __i_unique_occurrences @
 	COMPREPLY+=($(compgen -W "${words}" "${COMP_WORDS[1]}"))
 }
 
