@@ -242,7 +242,7 @@ function __i_unique_occurrences_completion {
 
 function __i_completion {
 	local cur_word
-    cur_word="${COMP_WORDS[COMP_CWORD]}"
+	cur_word="${COMP_WORDS[COMP_CWORD]}"
 
 	local words
 	words="amend list mentioned tagged find occurrences git upgrade today yesterday digest remember analyse"
@@ -253,7 +253,7 @@ function __i_completion {
 	esac
 
 	# __i_unique_occurrences @
-	COMPREPLY+=($(compgen -W "${words}" "${COMP_WORDS[1]}"))
+	COMPREPLY+=($(compgen -W "${words}" "${COMP_WORDS[COMP_CWORD]}"))
 }
 
 
