@@ -237,7 +237,7 @@ for line in sys.stdin:
 }
 
 function __i_unique_occurrences_completion {
-	__i_list | sed 's/\ /\n/g' | grep ${1} --color=never | sed 's/,//g; s/\.//g' | sort | uniq | sort -rh | tr '\n' ' ' | xargs
+	__i_list | sed 's/\ /\n/g' | grep ${1} --color=never | sed 's/,//g; s/\.//g' | sort | uniq | sort -rh | tr '\n' ' '
 }
 
 function __i_completion {
