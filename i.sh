@@ -92,20 +92,79 @@ function i {
 			source $I_SOURCE_DIR/i.sh
 			return;;
 
+		
+		"help") # Display help
+			__i_help
+			return;;
+		
+		"--help") # Display help
+			__i_help
+			return;;
+		
+		"-h") # Display help
+			__i_help
+			return;;
+
 	esac
+
+	if [ ! -n "${1}" ]; then
+		__i_help
+		return
+	fi
 
 	# add a journal entry
 	__i_write "$@"
 }
 
+# basic help function
+function __i_help {
+  echo "Usage: i [COMMAND|MESSAGE]"
+  echo ""
+  echo "COMMANDS:"
+  echo "  amend            Overwrite the last message - useful in case of missing info or typos."
+  echo "  list             List out the journal."
+  echo "  mentioned        List out names mentioned or entries where a specific person is mentioned."
+  echo "  tagged           List out tags mentioned or entries where a specific tag is mentioned."
+  echo "  find             Generic find for anything."
+  echo "  occurrences      Count occurrences of anything."
+  echo "  git              Run arbitrary git commands on the 'i' repo."
+  echo "  today            View today's journal entries with a special date format, paginated."
+  echo "  yesterday        View yesterday's journal entries with a special date format, paginated."
+  echo "  digest           Use GPT to summarize the week's activity into a digest."
+  echo "  remember         Use GPT to generate a to-do list of tasks that sound outstanding from the previous week."
+  echo "  analyse          Run arbitrary GPT analysis commands on a specific time window from the journal."
+  echo "  upgrade          Upgrade the 'i' client."
+  echo "  help(-h|--help)  Display this help for the 'i' command."
+  echo ""
+  echo "By default, if none of the recognized commands are used, a new journal entry is created with the provided message."
+  echo ""
+  echo "For more detailed information on each command, look at the source of 'i.sh'."
+}
+
 # write a (potentially empty) commit with a message
 function __i_write {
+	HOOKS_PATH="$(git config core.hooksPath)"
+	git config core.hooksPath .git/hooks
 	git  -C $I_PATH/ commit --allow-empty -qam "$*"
+	git config core.hooksPath "$HOOKS_PATH"
+
+	# If we have a remote, push to it async
+	if [ -n "$(git  -C $I_PATH/ remote show | grep origin)" ]; then
+		( git  -C $I_PATH/ push -u origin main -q > /dev/null 2>&1 & );
+	fi
 }
 
 # amend the previous message
 function __i_amend {
+	HOOKS_PATH="$(git config core.hooksPath)"
+	git config core.hooksPath .git/hooks
 	git  -C $I_PATH/ commit --allow-empty --amend -qam "$*"
+	git config core.hooksPath "$HOOKS_PATH"
+
+	# If we have a remote, push to it async
+	if [ -n "$(git  -C $I_PATH/ remote show | grep origin)" ]; then
+		( git  -C $I_PATH/ push -u origin main -f -q > /dev/null 2>&1 & );
+	fi
 }
 
 # list the entries in readable format
@@ -243,4 +302,9 @@ if [ ! -e "$I_PATH" ]; then
 	mkdir -p $I_PATH
 	git -C $I_PATH/ init -q
 	__i_write 'created a journal'
+fi
+
+# Check if the script is being executed directly. If so, we run i directly
+if [[ "${BASH_SOURCE[0]}" = "${0}" ]]; then
+    i "$@"
 fi

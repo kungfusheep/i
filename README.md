@@ -186,3 +186,25 @@ i git remote add origin git@my-git.lb.local:me/myi.git
 ```bash
 i git push
 ```
+
+## Log commits made in other repositories to i.sh
+
+A post-commit hook provided in `.githooks/post-commit` which will then automatically log commits using `i.sh`.
+
+Commits will then be logged in the following format as they are made:
+
+```
+34 minutes ago: [repo:i] (branch:main) cmsg: 'doc: Update README with post-commit hook'
+```
+
+You can install it either for a specific repository or globally for all your repositories.
+
+### Log commits for a specific repository
+
+1. Modify your PATH variable to include this repository, or place `i.sh` on your PATH.
+2. Copy `.githooks/post-commit` into `.git/hooks`
+
+### Log commits for all repositories
+
+1. Modify your PATH variable to include this repository, or place `i.sh` on your PATH.
+2. From the root of this repository, run `git config --global core.hooksPath $PWD/.githooks`
