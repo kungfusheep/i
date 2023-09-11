@@ -3,9 +3,7 @@ I_PATH=~/i
 I_SOURCE_DIR=$(cd "$( dirname "${BASH_SOURCE[0]}" )" &> /dev/null && pwd)
 I_GPT_VERSION="${I_GPT_VERSION:=gpt-4}"
 
-complete -W "amend list mentioned tagged find occurrences git upgrade today yesterday digest remember analyse" i
-
-# TODO add completion for names and tags
+complete -F __i_completion i
 
 since=""
 
@@ -296,6 +294,28 @@ for line in sys.stdin:
 		pass  # ignore lines that are not valid JSON
 "
 }
+
+# used to create a list of unique occurrences of a specific character
+function __i_unique_occurrences_completion {
+	__i_list | sed 's/\ /\n/g' | grep ${1} --color=never | sed 's/,//g; s/\.//g' | sort | uniq | sort -rh | tr '\n' ' '
+}
+
+# used to power tab completion for the @ and % characters & default
+function __i_completion {
+	local cur_word
+	cur_word="${COMP_WORDS[COMP_CWORD]}"
+
+	local words
+	words="amend list mentioned tagged find occurrences git upgrade today yesterday digest remember analyse"
+
+	case $cur_word in
+	%*) words=$(__i_unique_occurrences_completion % ) ;;
+	@*) words=$(__i_unique_occurrences_completion @ ) ;;
+	esac
+
+	COMPREPLY+=($(compgen -W "${words}" "${COMP_WORDS[COMP_CWORD]}"))
+}
+
 
 # do an init of the i repo if we detect it isn't there
 if [ ! -e "$I_PATH" ]; then
