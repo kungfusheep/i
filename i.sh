@@ -168,7 +168,7 @@ function __i_amend {
 
 # list the entries in readable format
 # the syntax is `i list` or 
-# the syntax is `i list "last monday"`
+# the syntax is `i list since "last monday" until "yesterday"`
 function __i_list {
     item="${1}"
 	local until_cmd since_cmd
