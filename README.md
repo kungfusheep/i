@@ -47,6 +47,32 @@ source i.sh #this creates your journal repo at ~/i
 
 > You can 'mention' names with `@` and 'tag' things with `%`.
 
+### List entries between time range
+
+```bash
+❯ i list since "30 minutes ago"
+
+21 minutes ago: went for a walk
+
+❯ i list until "60 minutes ago"
+
+79 minutes ago: created a journal
+
+❯ i list until "50 minutes ago" since "60 minutes ago"
+
+54 minutes ago: spoke to @john
+
+54 minutes ago: added an entry
+
+❯ i list since "60 minutes ago" until "50 minutes ago"
+
+54 minutes ago: spoke to @john
+
+54 minutes ago: added an entry
+```
+
+> See the official git documentation, [date-formats.txt](https://raw.githubusercontent.com/git/git/master/Documentation/date-formats.txt) for all possible date and time representations `since` and `until` support.
+
 ### List mentions
 
 ```bash
@@ -55,7 +81,7 @@ source i.sh #this creates your journal repo at ~/i
    2 @fred
    1 @linda
    1 @kelly
-```` 
+```
 
 ### List specific entries for people
 
