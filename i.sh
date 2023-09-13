@@ -166,8 +166,15 @@ function __i_amend {
 }
 
 # list the entries in readable format
+# the syntax is `i list` or 
+# the syntax is `i list "last monday"`
 function __i_list {
-	git -C $I_PATH/ log --since "${since:-1970}" --pretty=format:"%Cblue%cr: %Creset%B";
+	logUntil="${1}"
+	if [ "$logUntil" == "" ]; then # allow user to type "list" as first argument
+		git -C $I_PATH/ log --since "${since:-1970}" --pretty=format:"%Cblue%cr: %Creset%B";
+	else
+		git -C $I_PATH/ log --since "${since:-1970}" --until=$logUntil --pretty=format:"%Cblue%cr: %Creset%B";
+	fi
 }
 
 function __i_count_occurrences {
