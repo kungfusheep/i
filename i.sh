@@ -18,7 +18,8 @@ function i {
 			__i_amend "$@"; return;;
 
 		"list" ) # list out the journal
-			__i_list; return;;
+			shift
+			__i_list "$@"; return;;
 
 		"mentioned") # list out names mentioned
 			shift
@@ -169,12 +170,20 @@ function __i_amend {
 # the syntax is `i list` or 
 # the syntax is `i list "last monday"`
 function __i_list {
-	logUntil="${1}"
-	if [ "$logUntil" == "" ]; then # allow user to type "list" as first argument
-		git -C $I_PATH/ log --since "${since:-1970}" --pretty=format:"%Cblue%cr: %Creset%B";
-	else
-		git -C $I_PATH/ log --since "${since:-1970}" --until=$logUntil --pretty=format:"%Cblue%cr: %Creset%B";
-	fi
+    item="${1}"
+
+    while [ "$item" == "until" ] || [ "$item" == "since" ]; do
+        if [ "$item" == "until" ]; then
+            until_cmd="${2}"
+            shift 2
+        elif [ "$item" == "since" ]; then
+            since_cmd="${2}"
+            shift 2
+        fi
+        item="${1}"
+    done
+
+	git -C $I_PATH/ log --since "${since_cmd:=1970}" --until "${until_cmd:=now}" --pretty=format:"%Cblue%cr: %Creset%B";
 }
 
 function __i_count_occurrences {
