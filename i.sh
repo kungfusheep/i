@@ -170,7 +170,7 @@ function __i_amend {
 # the syntax is `i list` or 
 # the syntax is `i list since "last monday" until "yesterday"`
 function __i_list {
-    item="${1}"
+	item="${1}"
 	local until_cmd since_cmd
 
 	while [ "$item" == "until" ] || [ "$item" == "since" ] && [ -n "${2}" ]; do
