@@ -121,7 +121,7 @@ function __i_help {
   echo ""
   echo "COMMANDS:"
   echo "  amend            Overwrite the last message - useful in case of missing info or typos."
-  echo "  list             List out the journal."
+  echo "  list             List out the journal. Optionally, you can specify a date range using 'since' and 'until'."
   echo "  mentioned        List out names mentioned or entries where a specific person is mentioned."
   echo "  tagged           List out tags mentioned or entries where a specific tag is mentioned."
   echo "  find             Generic find for anything."
