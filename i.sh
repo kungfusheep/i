@@ -121,7 +121,7 @@ function __i_help {
   echo ""
   echo "COMMANDS:"
   echo "  amend            Overwrite the last message - useful in case of missing info or typos."
-  echo "  list             List out the journal. Optionally, you can specify a date range using 'since' and 'until'."
+  echo "  list             List out the journal."
   echo "  mentioned        List out names mentioned or entries where a specific person is mentioned."
   echo "  tagged           List out tags mentioned or entries where a specific tag is mentioned."
   echo "  find             Generic find for anything."
@@ -171,6 +171,7 @@ function __i_amend {
 # the syntax is `i list "last monday"`
 function __i_list {
     item="${1}"
+	local until_cmd since_cmd
 
     while [ "$item" == "until" ] || [ "$item" == "since" ]; do
         if [ "$item" == "until" ]; then
