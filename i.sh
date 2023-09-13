@@ -174,14 +174,14 @@ function __i_list {
 	local until_cmd since_cmd
 
 	while [ "$item" == "until" ] || [ "$item" == "since" ] && [ -n "${2}" ]; do
-        if [ "$item" == "until" ]; then
-            until_cmd="${2}"
-        elif [ "$item" == "since" ]; then
-            since_cmd="${2}"
-        fi
+		if [ "$item" == "until" ]; then
+			until_cmd="${2}"
+		elif [ "$item" == "since" ]; then
+			since_cmd="${2}"
+		fi
 		shift 2
-        item="${1}"
-    done
+		item="${1}"
+	done
 
 	git -C $I_PATH/ log --since "${since_cmd:=1970}" --until "${until_cmd:=now}" --pretty=format:"%Cblue%cr: %Creset%B";
 }
