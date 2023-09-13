@@ -173,14 +173,13 @@ function __i_list {
     item="${1}"
 	local until_cmd since_cmd
 
-    while [ "$item" == "until" ] || [ "$item" == "since" ]; do
+	while [ "$item" == "until" ] || [ "$item" == "since" ] && [ -n "${2}" ]; do
         if [ "$item" == "until" ]; then
             until_cmd="${2}"
-            shift 2
         elif [ "$item" == "since" ]; then
             since_cmd="${2}"
-            shift 2
         fi
+		shift 2
         item="${1}"
     done
 
