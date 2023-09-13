@@ -216,18 +216,23 @@ function __i_find {
 }
 
 # run arbitrary GPT analysis commands on a specific time window from the journal
-# the syntax is `i analyse since "last monday" list all people i interacted with`
+# the syntax is `i analyse since "last monday" until "yesterday" list all people i interacted with`
 function __i_analyse { 
 	item="${1}"
-	shift
+	local until_cmd since_cmd
 
-	if [ "$item" == "since" ]; then # allow user to type "since" as first argument
+	while [ "$item" == "until" ] || [ "$item" == "since" ] && [ -n "${2}" ]; do
+		if [ "$item" == "until" ]; then
+			until_cmd="${2}"
+		elif [ "$item" == "since" ]; then
+			since_cmd="${2}"
+		fi
+		shift 2
 		item="${1}"
-		shift
-	fi
+	done
 
 	# the journal
-	OUT=$(git -C $I_PATH/ log --since "$item" --pretty=format:"%cr: %B" | tr -d '"\n')
+	OUT=$(git -C $I_PATH/ log --since "${since_cmd:=1970}" --until "${until_cmd:=now}" --pretty=format:"%cr: %B" | tr -d '"\n')
 	# the whole prompt
 	PROMPT="$* \n\n\n "$OUT""
 
@@ -342,5 +347,5 @@ fi
 
 # Check if the script is being executed directly. If so, we run i directly
 if [[ "${BASH_SOURCE[0]}" = "${0}" ]]; then
-    i "$@"
+	i "$@"
 fi
