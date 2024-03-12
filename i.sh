@@ -1,7 +1,7 @@
 
-I_PATH=~/i
-I_SOURCE_DIR=$(cd "$( dirname "${BASH_SOURCE[0]}" )" &> /dev/null && pwd)
-I_GPT_VERSION="${I_GPT_VERSION:=gpt-4}"
+export I_PATH=~/i
+export I_SOURCE_DIR=$(cd "$( dirname "${BASH_SOURCE[0]}" )" &> /dev/null && pwd)
+export I_GPT_VERSION="${I_GPT_VERSION:=gpt-4}"
 
 complete -F __i_completion i
 
@@ -114,6 +114,7 @@ function i {
 	# add a journal entry
 	__i_write "$@"
 }
+
 
 # basic help function
 function __i_help {
