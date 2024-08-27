@@ -184,7 +184,8 @@ function __i_list {
 		item="${1}"
 	done
 
-	git -C $I_PATH/ log --since "${since_cmd:=1970}" --until "${until_cmd:=now}" --pretty=format:"%Cblue%cr: %Creset%B";
+	git -C $I_PATH/ log --since "${since_cmd:=1970}" --until "${until_cmd:=now}" --pretty=format:"${I_LOG_FMT:="%Cblue%cr: %Creset%B"}";
+
 }
 
 function __i_count_occurrences {
