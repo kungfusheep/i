@@ -1,9 +1,24 @@
 
 export I_PATH=~/i
-export I_SOURCE_DIR=$(cd "$( dirname "${BASH_SOURCE[0]}" )" &> /dev/null && pwd)
+
+# Get the directory of this script (works in both bash and zsh)
+if [ -n "$BASH_SOURCE" ]; then
+    export I_SOURCE_DIR=$(cd "$( dirname "${BASH_SOURCE[0]}" )" &> /dev/null && pwd)
+elif [ -n "$ZSH_VERSION" ]; then
+    export I_SOURCE_DIR="${0:A:h}"
+else
+    export I_SOURCE_DIR="$(cd "$(dirname "$0")" && pwd)"
+fi
+
 export I_GPT_VERSION="${I_GPT_VERSION:=gpt-4}"
 
-complete -F __i_completion i
+# Setup shell-specific completions
+if [ -n "$BASH_VERSION" ]; then
+    complete -F __i_completion i
+elif [ -n "$ZSH_VERSION" ]; then
+    # ZSH completion will be set up below
+    :  # placeholder
+fi
 
 since=""
 
@@ -72,7 +87,8 @@ function i {
 			return;;
 
 		"digest") # use gpt to summarise the weeks activity into a digest
-			__i_digest
+			shift 
+			__i_digest "$@"
 			return;;
 
 		"remember") # use gpt to generate a todo list of tasks that sound like they are outstanding from the previous week
@@ -258,7 +274,15 @@ function __i_analyse {
 
 # use gpt to summarise the weeks activity into a digest
 function __i_digest {
-	OUT=$(git -C $I_PATH/ log --since "7 days ago" --pretty=format:"%cr: %B" | tr -d '"\n')
+
+	local since_param="7 days ago"
+
+	if [ "${1}" == "since" ] && [ -n "${2}" ]; then
+		since_param="${2}"
+		shift 2
+	fi
+
+	OUT=$(git -C $I_PATH/ log --since "$since_param" --pretty=format:"%cr: %B" | tr -d '"\n')
 
 	curl -X POST -s --no-buffer \
 	-H "Content-Type: application/json" \
@@ -325,19 +349,66 @@ function __i_unique_occurrences_completion {
 
 # used to power tab completion for the @ and % characters & default
 function __i_completion {
-	local cur_word
-	cur_word="${COMP_WORDS[COMP_CWORD]}"
+	if [ -n "$BASH_VERSION" ]; then
+		local cur_word
+		cur_word="${COMP_WORDS[COMP_CWORD]}"
 
-	local words
-	words="amend list mentioned tagged find occurrences git upgrade today yesterday digest remember analyse"
+		local words
+		words="amend list mentioned tagged find occurrences git upgrade today yesterday digest remember analyse"
 
-	case $cur_word in
-	%*) words=$(__i_unique_occurrences_completion % ) ;;
-	@*) words=$(__i_unique_occurrences_completion @ ) ;;
-	esac
+		case $cur_word in
+		%*) words=$(__i_unique_occurrences_completion % ) ;;
+		@*) words=$(__i_unique_occurrences_completion @ ) ;;
+		esac
 
-	COMPREPLY+=($(compgen -W "${words}" "${COMP_WORDS[COMP_CWORD]}"))
+		COMPREPLY+=($(compgen -W "${words}" "${COMP_WORDS[COMP_CWORD]}"))
+	fi
 }
+
+# ZSH completion function
+if [ -n "$ZSH_VERSION" ]; then
+	function _i_zsh_completion {
+		local -a commands
+		commands=(
+			'amend:Overwrite the last message'
+			'list:List out the journal'
+			'mentioned:List out names mentioned'
+			'tagged:List out tags mentioned'
+			'find:Generic find for anything'
+			'occurrences:Count occurrences of anything'
+			'git:Run arbitrary git commands on the i repo'
+			'upgrade:Upgrade the i client'
+			'today:View todays journal entries'
+			'yesterday:View yesterdays journal entries'
+			'digest:Summarize the weeks activity'
+			'remember:Generate todo list from previous week'
+			'analyse:Run arbitrary GPT analysis'
+		)
+
+		local cur_word="${words[CURRENT]}"
+
+		if [[ $CURRENT -eq 2 ]]; then
+			case $cur_word in
+				%*)
+					local tags=($(__i_unique_occurrences_completion %))
+					compadd -a tags
+					;;
+				@*)
+					local mentions=($(__i_unique_occurrences_completion @))
+					compadd -a mentions
+					;;
+				*)
+					_describe 'command' commands
+					;;
+			esac
+		fi
+	}
+
+	# Only setup completion if compinit has been called
+	if type compdef >/dev/null 2>&1; then
+		compdef _i_zsh_completion i
+	fi
+fi
 
 
 # do an init of the i repo if we detect it isn't there
@@ -348,6 +419,13 @@ if [ ! -e "$I_PATH" ]; then
 fi
 
 # Check if the script is being executed directly. If so, we run i directly
-if [[ "${BASH_SOURCE[0]}" = "${0}" ]]; then
-	i "$@"
+if [ -n "$BASH_VERSION" ]; then
+	if [[ "${BASH_SOURCE[0]}" = "${0}" ]]; then
+		i "$@"
+	fi
+elif [ -n "$ZSH_VERSION" ]; then
+	# In zsh, only run if script is executed, not sourced
+	if [[ "${ZSH_EVAL_CONTEXT}" = "toplevel" ]]; then
+		i "$@"
+	fi
 fi
