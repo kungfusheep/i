@@ -1,9 +1,17 @@
 
 export I_PATH=~/i
-export I_SOURCE_DIR=$(cd "$( dirname "${BASH_SOURCE[0]}" )" &> /dev/null && pwd)
+if [ -n "$ZSH_VERSION" ]; then
+	_i_src="${(%):-%x}"
+else
+	_i_src="${BASH_SOURCE[0]}"
+fi
+export I_SOURCE_DIR=$(cd "$( dirname "$_i_src" )" > /dev/null 2>&1 && pwd)
 export I_GPT_VERSION="${I_GPT_VERSION:=gpt-4}"
 
-complete -F __i_completion i
+# bash has `complete` built in; zsh only after bashcompinit, so register it from .zshrc there
+if command -v complete > /dev/null 2>&1; then
+	complete -F __i_completion i
+fi
 
 since=""
 
@@ -19,12 +27,18 @@ function i {
 
 		"list" ) # list out the journal
 			shift
+			__i_pull
 			__i_list "$@"; return;;
+
+		"sync") # pull entries written on other machines, then push ours
+			__i_sync && echo "journal in sync"
+			return;;
 
 		"mentioned") # list out names mentioned
 			shift
+			__i_pull
 
-			if [ "${1}" == "" ]; then
+			if [ "${1}" = "" ]; then
 				__i_mentioned;
 			else
 				__i_mentioned_someone "${1}";
@@ -34,8 +48,9 @@ function i {
 
 		"tagged") # list out tags tagged
 			shift
+			__i_pull
 
-			if [ "${1}" == "" ]; then
+			if [ "${1}" = "" ]; then
 				__i_tagged;
 			else
 				__i_tagged_something "${1}";
@@ -44,12 +59,14 @@ function i {
 
 		"find") # generic find for anything
 			shift
+			__i_pull
 
 			__i_find "$*"
 			return;;
 
 		"occurrences") # count occurrences of anything
 			shift
+			__i_pull
 
 			__i_count_occurrences "$@"
 			return;;
@@ -61,12 +78,13 @@ function i {
 
 		"today") # view todays journal entries with a special date format, paginated
 			shift
+			__i_pull
 
 			git -C $I_PATH/ log --since "1am"  --pretty=format:"%Cblue%cd (%cr): %Creset%B" --date=format:"%H:%M" | fmt | less
 			return;;
 
 		"yesterday") # view yesterdays journal entries with a special date format, paginated
-	
+			__i_pull
 			# i'm using this until i've implemented 'until'
 			git -C $I_PATH/ log --since "2 days ago" --until midnight  --pretty=format:"%Cblue%cd: %Creset%B" --date=format:"%H:%M" | fmt | less
 			return;;
@@ -127,6 +145,7 @@ function __i_help {
   echo "  tagged           List out tags mentioned or entries where a specific tag is mentioned."
   echo "  find             Generic find for anything."
   echo "  occurrences      Count occurrences of anything."
+  echo "  sync             Pull entries written on other machines, then push this machine's."
   echo "  git              Run arbitrary git commands on the 'i' repo."
   echo "  today            View today's journal entries with a special date format, paginated."
   echo "  yesterday        View yesterday's journal entries with a special date format, paginated."
@@ -141,29 +160,34 @@ function __i_help {
   echo "For more detailed information on each command, look at the source of 'i.sh'."
 }
 
-# write a (potentially empty) commit with a message
-function __i_write {
-	HOOKS_PATH="$(git config core.hooksPath)"
-	git config core.hooksPath .git/hooks
-	git  -C $I_PATH/ commit --allow-empty -qam "$*"
-	git config core.hooksPath "$HOOKS_PATH"
-
-	# If we have a remote, push to it async
-	if [ -n "$(git  -C $I_PATH/ remote show | grep origin)" ]; then
-		( git  -C $I_PATH/ push -u origin main -q > /dev/null 2>&1 & );
-	fi
+function __i_has_remote {
+	git -C "$I_PATH" remote get-url origin > /dev/null 2>&1
 }
 
-# amend the previous message
-function __i_amend {
-	HOOKS_PATH="$(git config core.hooksPath)"
-	git config core.hooksPath .git/hooks
-	git  -C $I_PATH/ commit --allow-empty --amend -qam "$*"
-	git config core.hooksPath "$HOOKS_PATH"
+# bring in entries written on other machines; quiet and tolerant of being offline
+function __i_pull {
+	__i_has_remote || return 0
+	git -C "$I_PATH" pull --rebase -q origin main > /dev/null 2>&1
+}
 
-	# If we have a remote, push to it async
-	if [ -n "$(git  -C $I_PATH/ remote show | grep origin)" ]; then
-		( git  -C $I_PATH/ push -u origin main -f -q > /dev/null 2>&1 & );
+# pull then push, so two machines can both write between syncs
+function __i_sync {
+	__i_has_remote || return 0
+	git -C "$I_PATH" pull --rebase -q origin main && git -C "$I_PATH" push -u origin main -q
+}
+
+# write a (potentially empty) commit with a message
+function __i_write {
+	git -C "$I_PATH" -c core.hooksPath=/dev/null commit --allow-empty -qam "$*"
+	( __i_sync > /dev/null 2>&1 & )
+}
+
+# amend the previous message. the lease stops it overwriting entries another machine pushed
+# in between; if that happens fall back to a normal sync (the pre-amend entry survives too)
+function __i_amend {
+	git -C "$I_PATH" -c core.hooksPath=/dev/null commit --allow-empty --amend -qam "$*"
+	if __i_has_remote; then
+		( git -C "$I_PATH" push -u origin main --force-with-lease -q > /dev/null 2>&1 || __i_sync > /dev/null 2>&1 & )
 	fi
 }
 
@@ -174,10 +198,10 @@ function __i_list {
 	item="${1}"
 	local until_cmd since_cmd
 
-	while [ "$item" == "until" ] || [ "$item" == "since" ] && [ -n "${2}" ]; do
-		if [ "$item" == "until" ]; then
+	while [ "$item" = "until" ] || [ "$item" = "since" ] && [ -n "${2}" ]; do
+		if [ "$item" = "until" ]; then
 			until_cmd="${2}"
-		elif [ "$item" == "since" ]; then
+		elif [ "$item" = "since" ]; then
 			since_cmd="${2}"
 		fi
 		shift 2
@@ -223,10 +247,10 @@ function __i_analyse {
 	item="${1}"
 	local until_cmd since_cmd
 
-	while [ "$item" == "until" ] || [ "$item" == "since" ] && [ -n "${2}" ]; do
-		if [ "$item" == "until" ]; then
+	while [ "$item" = "until" ] || [ "$item" = "since" ] && [ -n "${2}" ]; do
+		if [ "$item" = "until" ]; then
 			until_cmd="${2}"
-		elif [ "$item" == "since" ]; then
+		elif [ "$item" = "since" ]; then
 			since_cmd="${2}"
 		fi
 		shift 2
@@ -329,7 +353,7 @@ function __i_completion {
 	cur_word="${COMP_WORDS[COMP_CWORD]}"
 
 	local words
-	words="amend list mentioned tagged find occurrences git upgrade today yesterday digest remember analyse"
+	words="amend list sync mentioned tagged find occurrences git upgrade today yesterday digest remember analyse"
 
 	case $cur_word in
 	%*) words=$(__i_unique_occurrences_completion % ) ;;
@@ -348,6 +372,10 @@ if [ ! -e "$I_PATH" ]; then
 fi
 
 # Check if the script is being executed directly. If so, we run i directly
-if [[ "${BASH_SOURCE[0]}" = "${0}" ]]; then
+# (zsh sets $0 to the sourced file while sourcing, so it needs its own test)
+if [ -n "$ZSH_VERSION" ]; then
+	[ "$ZSH_EVAL_CONTEXT" = "toplevel" ] && i "$@"
+elif [ "$_i_src" = "${0}" ]; then
 	i "$@"
 fi
+unset _i_src
